@@ -1,0 +1,13 @@
+schema: '2.0'
+stages:
+  train_v0:
+    cmd: python src/train.py
+    deps:
+    - path: data/data_v1.csv
+      hash: md5
+      md5: 4954d4088152604322732f13c4e14691
+      size: 2606
+    - path: src/train.py
+      hash: md5
+      md5: 035d99188c54e92f0666a4b1dcb31b16
+      size: 579
