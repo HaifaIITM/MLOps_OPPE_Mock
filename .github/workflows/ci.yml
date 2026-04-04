@@ -1,0 +1,55 @@
+name: ML Pipeline CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: write
+  pull-requests: write
+  
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Setup GCS Credentials
+        run: |
+          cat > $HOME/gcs-creds.json << 'EOF'
+          ${{ secrets.GCS_CREDS }}
+          EOF
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$HOME/gcs-creds.json" >> $GITHUB_ENV
+          
+      - name: Pull Data from DVC
+        run: |
+          dvc pull
+
+      - name: Run Tests
+        run: |
+          pytest
+      - name: Install CML
+        run: |
+          npm install -g @dvcorg/cml	
+
+      - name: Generate Report
+        run: |
+          echo "## Model Test Results" > report.md
+          echo "" >> report.md
+          echo "Tests executed successfully ✅" >> report.md    
+          
+      - name: Post Report to PR
+        env:
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: cml comment create report.md
